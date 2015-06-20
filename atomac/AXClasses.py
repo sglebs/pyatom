@@ -237,7 +237,7 @@ class BaseAXUIElement(_a11y.AXUIElement):
             return
         self.eventList.append((event, args))
 
-    def _addKeyToQueue(self, keychr, modFlags=0, globally=False):
+    def _addKeyToQueue(self, keychr, modFlags=0, globally=False, handleUpperSymbols=True):
         """Add keypress to queue.
 
         Parameters: key character or constant referring to a non-alpha-numeric
@@ -254,7 +254,7 @@ class BaseAXUIElement(_a11y.AXUIElement):
         if not hasattr(self, 'keyboard'):
             self.keyboard = AXKeyboard.loadKeyboard()
 
-        if keychr in self.keyboard['upperSymbols'] and not modFlags:
+        if keychr in self.keyboard['upperSymbols'] and handleUpperSymbols and not modFlags:
             self._sendKeyWithModifiers(keychr,
                                        [AXKeyCodeConstants.SHIFT],
                                        globally)
@@ -295,7 +295,7 @@ class BaseAXUIElement(_a11y.AXUIElement):
             self._queueEvent(Quartz.CGEventPost, (0, keyDown))
             self._queueEvent(Quartz.CGEventPost, (0, keyUp))
 
-    def _sendKey(self, keychr, modFlags=0, globally=False):
+    def _sendKey(self, keychr, modFlags=0, globally=False, handleUpperSymbols=True):
         """Send one character with no modifiers.
 
         Parameters: key character or constant referring to a non-alpha-numeric
@@ -312,7 +312,7 @@ class BaseAXUIElement(_a11y.AXUIElement):
         if keychr in escapedChrs:
             keychr = escapedChrs[keychr]
 
-        self._addKeyToQueue(keychr, modFlags, globally=globally)
+        self._addKeyToQueue(keychr, modFlags, globally=globally, handleUpperSymbols=handleUpperSymbols)
         self._postQueuedEvents()
 
     def _sendKeys(self, keystr):
@@ -429,7 +429,7 @@ class BaseAXUIElement(_a11y.AXUIElement):
         modFlags = self._pressModifiers(modifiers, globally=globally)
 
         # Press the non-modifier key
-        self._sendKey(keychr, modFlags, globally=globally)
+        self._sendKey(keychr, modFlags, globally=globally, handleUpperSymbols=False) #fixes #128.(by @sglebs) need to bypass the handling of upper symbols
 
         # Release the modifiers
         self._releaseModifiers(modifiers, globally=globally)
